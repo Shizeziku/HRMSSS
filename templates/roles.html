@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="row">
+<div class="col-md-4"></div>
+    <div class="col-sm-4" id="Createdep">
+        <h4 class="text-center alert alert-danger mt-4">Create Role</h4>
+        <form action="" method="POST">
+            {% csrf_token %}
+            {{form.as_p}}
+            <input type="submit" class="btn btn-success" id="btncreate" value="Create">
+        </form>
+    </div>
+
+    <div class="col-sm-12 mt-5 mb-4">
+        <h4 class="text-center alert alert-info">Show Roles</h4> 
+        {% if role %}
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                      <th scope="col">Sr.No</th>
+                      <th scope="col">Role Name</th>
+                      <th scope="col">Role Description</th>
+                      <th scope="col">Edit</th>
+                      <th scope="col">Delete</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for i in role %}
+                    <tr>
+                      <th scope="row">{{i.id}}</th>
+                      <td>{{i.role_name}}</td>
+                      <td>{{i.role_description}}</td>
+                      <td><a href="{% url 'updaterole' i.id %}" class="btn btn-warning btn-sm">Edit</a></td>
+                      <td><a href="{% url 'deleterole' i.id %}" class="btn btn-danger btn-sm">Delete</a></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+           
+            </table>
+        {% else %}  
+            <h4 class="text-center alert alert-info">No Records</h4>   
+        {% endif %}
+    </div> 
+</div>
+{% endblock content %}

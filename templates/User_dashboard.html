@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}User Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Welcome, {{ user.first_name }}!</h2>
+
+    <div class="card">
+        <h3>Profile Information</h3>
+        <p><strong>Username:</strong> {{ user.username }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Role:</strong> {{ user_role }}</p>
+        <p><strong>Department:</strong> {{ user_department }}</p>
+    </div>
+</div>
+{% endblock %}

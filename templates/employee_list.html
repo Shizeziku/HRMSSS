@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2>Employee List</h2>
+
+<!-- Add Employee Form -->
+<div class="row">
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+        <h3>Add Employee</h3>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Add Employee</button>
+        </form>
+    </div>
+    <div class="col-md-3"></div>
+</div>
+
+<!-- Employee Table -->
+<table>
+    <tr>
+        <th>Sr. No</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Email</th>
+        <th>Mobile</th>
+        <th>Department</th>
+        <th>Role</th>
+        <th>Reporting Manager</th>
+        <th>Username</th>
+        <th>Password</th>
+        <th>Edit</th>
+        <th>Delete</th>
+    </tr>
+
+    {% for employee in employees %}  {# ✅ Fixed variable name #}
+    <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ employee.first_name }}</td>
+        <td>{{ employee.last_name }}</td>
+        <td>{{ employee.email }}</td>
+        <td>{{ employee.mobile }}</td>
+        <td>{{ employee.dept.department_name }}</td> {# ✅ Use dept.dept_name instead of dept_id #}
+        <td>{{ employee.role.role_name }}</td> {# ✅ Use role.role_name instead of role_id #}
+        <td>{{ employee.reporting_manager.first_name }} {{ employee.reporting_manager.last_name }}</td>
+        <td>{{ employee.username }}</td>
+        <td>******</td> {# ✅ Hide password for security #}
+        <td><a href="" class="edit-btn">Edit</a></td>
+        <td><a href="" class="delete-btn">Delete</a></td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="12">No employees found.</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock content %}

@@ -1,0 +1,68 @@
+<nav class="navbar navbar-expand-lg mb-4">
+    <div class="container-fluid">
+      <!-- Navbar brand -->
+      <a class="navbar-brand" href="#">HRM Department</a>
+  
+      <!-- Navbar toggler (for mobile view) -->
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+  
+      <!-- Navbar links -->
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <!-- Navbar list items aligned to the left -->
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="nav-list">
+          {% if user.is_authenticated and user.is_superuser %}
+            <li class="nav-item">
+              <a class="nav-link text-red" id="Register" href="{% url 'home' %}">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-red" id="menu" aria-current="page" href="{% url 'add' %}">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-red" id="menu" aria-current="page" href="{% url 'roles' %}">Roles</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-red" id="menu" aria-current="page" href="{% url 'employee_list' %}">Employees</a>
+            </li>
+            <li class="nav-item">
+              <span class="navbar-text">Welcome: {{ request.user }}</span>
+            </li>
+          {% elif user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link text-red" id="Register" href="#">Profile Edit</a>
+            </li>
+            <li class="nav-item">
+              <span class="navbar-text">Welcome: {{ request.user }}</span>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link text-red" id="about" aria-current="page" href="{% url 'home' %}">Home</a>
+            </li>
+          {% endif %}
+        </ul>
+  
+        <!-- Right-aligned Logout button -->
+        {% if user.is_authenticated %}
+          <div class="d-flex ms-auto">
+            <a class="btn btn-danger" id="logout" href="{% url 'logout1' %}">Logout</a>
+          </div>
+        {% else %}
+          <!-- Right-aligned Login and Register buttons for non-authenticated users -->
+          <div class="d-flex ms-auto">
+            <a class="btn btn-outline-primary me-2" id="login" href="{% url 'login' %}">Login</a>
+            <a class="btn btn-primary" id="Register" href="{% url 'register' %}">Register</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+  

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+
+{% block content %}
+
+    <div class="container my-3 p-5 w-50 shadow">
+        <div class="container text-center p-1 rounded shadow bg-info">
+            <h2 class="text-white">Registration form</h2>
+        </div>
+        <form action="" method="POST">
+            {% csrf_token %}
+            {% if msg %}
+                <div class="alert alert-danger">
+                 {{msg}}
+                </div>
+         
+                {% endif %}
+            {{RF.as_p}}
+            
+            <p><input id="btnsub" class="card-btn" type="submit"></p>
+        </form>
+
+    </div>
+
+
+{% endblock content %}

@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="display: flex; justify-content: center; align-items: center; height: 80vh; text-align: center;">
+    <div>
+        <h2>Password Reset Email Sent</h2>
+        <p>A password reset link has been sent to your registered email address. Please check your inbox and follow the instructions to reset your password.</p>
+        <a href="{% url 'login' %}" style="text-decoration: none; padding: 10px 15px; background-color: #007bff; color: white; border-radius: 5px;">Go to Login</a>
+    </div>
+</div>
+{% endblock %}
