@@ -188,105 +188,12 @@ def updaterole(request, id):
 
 
 
-# from django.shortcuts import render, redirect, get_object_or_404
-# from django.contrib.auth.decorators import login_required
-# from .models import EmployeeUser
-# from .forms import EmployeeForm
-
-# @login_required
-# def employee_list(request):
-    
-#     employees = EmployeeUser.objects.all()
-
-#     if request.method == 'POST':
-#         form = EmployeeForm(request.POST)
-#         if form.is_valid():
-#             employee = form.save(commit=False)  
-              
-#             # Ensure reporting_manager is set to an EmployeeUser instance
-#             if employee.reporting_manager and isinstance(employee.reporting_manager, EmployeeUser):
-#                 employee.reporting_manager = employee.reporting_manager
-#             else:
-#                 employee.reporting_manager = None  # If invalid, default to None
-            
-#             employee.save()  # Save the employee instance
-#             return redirect('employee_list')  # Redirect after successful submission
-#     else:
-#         form = EmployeeForm()
-
-#     return render(request, 'employee_list.html', {'form': form, 'employees': employees})
-
-
-# @login_required
-# def employee_update(request, employee_id):
-  
-#     employee = get_object_or_404(EmployeeUser, pk=employee_id)
-
-#     if request.method == 'POST':
-#         form = EmployeeForm(request.POST, instance=employee)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('employee_list')
-#     else:
-#         form = EmployeeForm(instance=employee)
-
-#     return render(request, 'employee_update.html', {'form': form, 'employee': employee})
-
-
-# @login_required
-# def employee_delete(request, employee_id):
-#     employee = get_object_or_404(EmployeeUser, pk=employee_id)
-#     if request.method == 'POST':
-#         employee.delete()
-#         return redirect('employee_list')
-
-#     return render(request, 'employee_confirm_delete.html', {'employee': employee})
 
 
 # import logging
 from django.contrib import messages
 
 
-# logger = logging.getLogger(__name__)
-
-# def create_employee(request):
-#     departments = Department.objects.filter(status=True)
-#     roles = Roles.objects.filter(status=True)
-
-#     if request.method == "POST":
-#         form = EmployeeForm(request.POST)
-#         if form.is_valid():
-#             employee = form.save(commit=False)
-
-#             # Get the department ID from the POST data
-#             department_id = request.POST.get('dept')
-#             # Adjust filtering based on the department ID or name
-#             department = Department.objects.filter(id=department_id, status=True).first()
-
-#             if not department:
-#                 messages.error(request, "Invalid or inactive department selected")
-#                 return render(request, 'employee_list.html', {'form': form, 'departments': departments, 'roles': roles})
-
-#             # Get the role from the POST data
-#             role_id = request.POST.get('role')
-#             role = Roles.objects.filter(id=role_id, status=True).first()
-
-#             if not role:
-#                 messages.error(request, "Invalid or inactive role selected")
-#                 return render(request, 'employee_list.html', {'form': form, 'departments': departments, 'roles': roles})
-
-#             # Assign the department and role to the employee
-#             employee.department = department
-#             employee.role = role
-#             employee.save()
-
-#             messages.success(request, "Employee created successfully!")
-#             return redirect('employee_list')
-
-#     else:
-#         form = EmployeeForm()
-
-#     return render(request, 'employee_list.html', {'form': form, 'departments': departments, 'roles': roles})
 
 
 
@@ -392,3 +299,297 @@ def reset_password(request, uidb64, token):
 
 def password_reset_done(request):
     return render(request, 'password_reset_done.html')
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Task, TaskAssignment,Employe_User
+from .forms import TaskForm, TaskAssignmentForm
+from django.contrib.auth.models import User
+from django.utils import timezone
+ 
+
+
+
+from collections import Counter
+import json
+
+def task_list(request):
+    user = request.user
+    print(f"user dashboard successfull redirect {user}")
+
+    tasks = Task.objects.all()
+    assigned_tasks = TaskAssignment.objects.all()
+
+    # Count task priorities for the pie chart
+    priority_counts = Counter(task.task_priority for task in tasks)
+
+    return render(request, 'task_list.html', {
+        'tasks': tasks,
+        'assigned_tasks': assigned_tasks,
+        'priority_counts': json.dumps(priority_counts)  # Convert to JSON for Chart.js
+    })
+
+
+
+
+def task_create(request):
+    """Create a new task."""
+    if request.method == 'POST':
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.save()
+            print("✅ New Task Created:", task.task_id)  # Debugging Task ID
+            return redirect('task_list')
+        else:
+            print("❌ Form Errors:", form.errors)  # Debugging Form Errors
+    else:
+        form = TaskForm()
+
+    return render(request, 'task_form.html', {'form': form})
+
+
+
+
+def task_update(request, task_id):
+    """Allows the admin to update a task."""
+    task = get_object_or_404(Task, pk=task_id)
+
+    if not request.user.is_staff:
+        return redirect('task_list')
+
+    if request.method == "POST":
+        form = TaskForm(request.POST, instance=task)
+        if form.is_valid():
+            form.save()
+            return redirect('task_list')
+
+    else:
+        form = TaskForm(instance=task)
+    
+    return render(request, 'task_form.html', {'form': form})
+
+
+@login_required
+def task_delete(request, task_id):
+    """Allows the admin to delete a task."""
+    task = get_object_or_404(Task, pk=task_id)
+
+    if not request.user.is_staff:
+        return redirect('task_list')
+
+    if request.method == "POST":
+        task.delete()
+        return redirect('task_list')
+
+    return render(request, 'task_confirm_delete.html', {'task': task})
+
+
+
+
+def assign_task(request):
+    """View for assigning tasks to employees."""
+    print(f"User: {request.user}, Superuser: {request.user.is_superuser}, Role: {getattr(request.user, 'role', 'No role')} - Trying to assign a task")
+
+
+    if request.method == "POST":
+        print("Received POST request for task assignment")
+        form = TaskAssignmentForm(request.POST)
+        if form.is_valid():
+            task_assignment = form.save(commit=False)
+
+            if request.user.is_superuser:
+                task_assignment.assigned_by = None  # Set NULL since admin is not in Employe_User
+                task_assignment.assigned_by_name = request.user.username  # Store admin's username
+                print(f"Task assigned by Admin: {request.user.username}")
+            else:
+                try:
+                    employe_user = Employe_User.objects.get(username=request.user.username)
+                    task_assignment.assigned_by = employe_user
+                    task_assignment.assigned_by_name = f"{employe_user.first_name} {employe_user.last_name}"
+                    print(f"Task assigned by Employee: {task_assignment.assigned_by_name}")
+                except Employe_User.DoesNotExist:
+                    print("Error: No matching Employe_User found for this user.")
+                    return redirect("task_list")
+
+            task_assignment.save()
+            print("Task assigned successfully!")
+            return redirect("task_list")  # Redirect to task list page
+        else:
+            print("Form validation failed.")
+    else:
+        print("Rendering empty task assignment form.")
+        form = TaskAssignmentForm()
+
+    return render(request, "task_assign.html", {"form": form})
+
+
+
+
+#####################3333
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import PerformanceReview
+from .forms import PerformanceReviewForm
+
+def performance_reviews(request):
+    """Fetch performance reviews based on user role."""
+    user = request.user  # Logged-in user
+
+    if user.is_superuser:  
+        # Admin: See reviews where reviewed_by is also an admin
+        reviews = PerformanceReview.objects.filter(reviewed_by__is_superuser=True)
+    elif user.is_staff:  
+        # Manager/Staff: See reviews where they are the reviewer
+        reviews = PerformanceReview.objects.filter(reviewed_by=user)
+    else:  
+        # Regular Employee: See reviews where they are the employee
+        reviews = PerformanceReview.objects.filter(employee=user)
+
+    return render(request, 'review_list.html', {'reviews': reviews})
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .forms import PerformanceReviewForm
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .forms import PerformanceReviewForm
+
+def add_review(request):
+    """View for adding a new performance review."""
+    print("➡️ Entering add_review view")  # Debugging
+
+    if request.method == 'POST':
+        print("📌 POST request received")  # Debugging
+
+        form = PerformanceReviewForm(request.POST, user=request.user)
+        print(f"🔍 Form initialized with data: {request.POST}")  # Debugging
+
+        if form.is_valid():
+            print("✅ Form is valid! Proceeding to save.")  # Debugging
+
+            review = form.save(commit=False)  # Do not save to DB yet
+            review.reviewed_by = request.user  # Assign the logged-in user
+            review.save()  # Now save to DB
+
+            messages.success(request, "Performance review added successfully!")
+            print("💾 Review saved successfully!")  # Debugging
+
+            return redirect('review_list')
+        else:
+            print("❌ Form submission failed. Errors below:")  # Debugging
+            for field, errors in form.errors.items():
+                for error in errors:
+                    print(f"  🔴 Field '{field}': {error}")  # Print each error
+
+            messages.error(request, "Form submission failed. Please check errors below.")
+    
+    else:
+        print("🟢 GET request received. Displaying empty form.")  # Debugging
+        form = PerformanceReviewForm(user=request.user)
+
+    return render(request, 'add_review.html', {'form': form})
+
+def edit_review(request, review_id):
+    review = get_object_or_404(PerformanceReview, pk=review_id)
+    if request.method == 'POST':
+        form = PerformanceReviewForm(request.POST, instance=review)
+        if form.is_valid():
+            form.save()
+            return redirect('review_list')
+    else:
+        form = PerformanceReviewForm(instance=review)
+    return render(request, 'edit_review.html', {'form': form, 'review': review})
+
+def delete_review(request, review_id):
+    review = get_object_or_404(PerformanceReview, pk=review_id)
+    review.delete()
+    return redirect('review_list')
+####################################
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+from django.contrib import messages
+from .models import Leave, LeaveQuota
+from .forms import LeaveApplicationForm, LeaveApprovalForm
+from .models import Employe_User
+@login_required
+def apply_leave(request):
+    if request.method == "POST":
+        form = LeaveApplicationForm(request.POST)
+        if form.is_valid():
+            leave = form.save(commit=False)
+            leave.employee = request.user  # Assign logged-in employee
+
+            # Check if start_date or end_date is missing
+            if not leave.start_date or not leave.end_date:
+                form.add_error(None, "Start Date and End Date cannot be empty.")
+                return render(request, 'apply_leave.html', {'form': form})  
+
+            if leave.start_date > leave.end_date:
+                form.add_error("start_date", "Start date cannot be after end date.")
+                return render(request, 'apply_leave.html', {'form': form})  
+
+            leave.save()
+            return redirect('leave_status')
+
+    else:
+        form = LeaveApplicationForm()
+    return render(request, 'apply_leave.html', {'form': form})
+
+@login_required
+def leave_status(request):
+    """Displays the leave status for the logged-in employee."""
+    leaves = Leave.objects.filter(employee=request.user)
+    return render(request, 'leave_status.html', {'leaves': leaves})
+
+@login_required
+def approve_leave(request, leave_id):
+    """Allows the admin to approve or reject leave requests."""
+    leave = get_object_or_404(Leave, id=leave_id)
+
+    if request.method == "POST":
+        form = LeaveApprovalForm(request.POST, instance=leave)
+        if form.is_valid():
+            approved_leave = form.save(commit=False)
+            approved_leave.approved_by = request.user  # Admin approving
+
+            if approved_leave.status == 'approved':
+                try:
+                    quota = LeaveQuota.objects.get(employee=approved_leave.employee, leave_type=approved_leave.leave_type)
+                    if approved_leave.total_days > quota.remain_quota:
+                        messages.error(request, "Not enough leave balance.")
+                    else:
+                        quota.used_quota += approved_leave.total_days
+                        quota.remain_quota -= approved_leave.total_days
+                        quota.save()
+                        approved_leave.save()
+                        messages.success(request, "Leave approved successfully!")
+                except LeaveQuota.DoesNotExist:
+                    messages.error(request, "Leave quota not set.")
+            else:
+                approved_leave.save()
+                messages.info(request, "Leave request rejected.")
+
+            return redirect('admin_dashboard')
+
+    else:
+        form = LeaveApprovalForm(instance=leave)
+
+    return render(request, 'approve_leave.html', {'form': form, 'leave': leave})
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import Leave
+
+@login_required
+def employee_leave_data(request):
+    """View for admins to see all employee leave data"""
+    if not request.user.is_staff:  # Ensure only admins can access
+        return render(request, 'access_denied.html')
+
+    leaves = Leave.objects.select_related('employee').all()
+    
+    return render(request, 'employee_leave_data.html', {'leaves': leaves})

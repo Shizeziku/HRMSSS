@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Modify Leave Record</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="start_date">Start Date:</label>
+            <input type="date" name="start_date" class="form-control" value="{{ leave.start_date }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="end_date">End Date:</label>
+            <input type="date" name="end_date" class="form-control" value="{{ leave.end_date }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="status">Status:</label>
+            <select name="status" class="form-control">
+                <option value="Pending" {% if leave.status == "Pending" %}selected{% endif %}>Pending</option>
+                <option value="Approved" {% if leave.status == "Approved" %}selected{% endif %}>Approved</option>
+                <option value="Rejected" {% if leave.status == "Rejected" %}selected{% endif %}>Rejected</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{% url 'view_leave_applications' %}" class="btn btn-secondary">Back</a>
+    </form>
+</div>
+{% endblock %}

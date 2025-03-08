@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Approve Leave Request</h2>
+    <p><strong>Employee:</strong> {{ leave.employee.username }}</p>
+    <p><strong>Leave Type:</strong> {{ leave.get_leave_type_display }}</p>
+    <p><strong>Reason:</strong> {{ leave.reason }}</p>
+    <p><strong>Start Date:</strong> {{ leave.start_date }}</p>
+    <p><strong>End Date:</strong> {{ leave.end_date }}</p>
+    <p><strong>Total Days:</strong> {{ leave.total_days }}</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="status" class="form-label">Approval Status</label>
+            {{ form.status }}
+        </div>
+        <button type="submit" class="btn btn-success">Approve</button>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Back</a>
+    </form>
+</div>
+{% endblock %}
