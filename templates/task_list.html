@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">Task List</h2>
+    <a href="{% url 'task_create' %}" class="btn btn-primary mb-3">Create Task</a>
+    <a href="{% url 'assign_task' %}" class="btn btn-success mb-3">Assign Task</a>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Priority</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Type</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td>{{ task.task_title }}</td>
+                <td>{{ task.task_description }}</td>
+                <td>{{ task.task_priority }}</td>
+                <td>{{ task.start_date }}</td>
+                <td>{{ task.end_date }}</td>
+                <td>{{ task.task_type }}</td>
+                <td>
+                    <a href="{% url 'task_update' task.task_id %}" class="btn btn-warning btn-sm">Edit</a>
+                    <a href="{% url 'task_delete' task.task_id %}" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">No tasks available</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3 class="mt-4">Assigned Tasks</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>Assigned To</th>
+                <th>Assigned By</th>
+                <th>Status</th>
+                <th>Assigned Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for assignment in assigned_tasks %}
+            <tr>
+                <td>{{ assignment.task.task_title }}</td>
+                <td>{{ assignment.employee.first_name }} {{ assignment.employee.last_name }}</td>
+                <td>{{ assignment.assigned_by_name }}</td>
+                <td>{{ assignment.status }}</td>
+                <td>{{ assignment.assigned_date }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No assigned tasks</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<h3 class="mt-4">Task Statistics</h3>
+<div class="row">
+    <div class="col-md-6">
+        <div class="chart-container">
+            <canvas id="taskChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="chart-container">
+            <canvas id="priorityChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    /* Centering and styling the charts */
+    .chart-container {
+        width: 100%;
+        max-width: 500px;
+        margin: auto;
+        padding: 20px;
+        background: #f8f9fa; /* Light grey background */
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: center;
+    }
+</style>
+
+<script>
+    // Task Data from Django Context
+    const totalTasks = {{ tasks|length }};
+    const assignedTasks = {{ assigned_tasks|length }};
+    const unassignedTasks = totalTasks - assignedTasks;
+
+    // Chart 1: Task Distribution (Bar Chart)
+    const ctx1 = document.getElementById('taskChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            labels: ['Total Tasks', 'Assigned Tasks', 'Unassigned Tasks'],
+            datasets: [{
+                label: 'Task Count',
+                data: [totalTasks, assignedTasks, unassignedTasks],
+                backgroundColor: ['#3498db', '#2ecc71', '#e74c3c'],
+                borderColor: ['#2980b9', '#27ae60', '#c0392b'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // Task Priority Data (from Django)
+    const priorityData = JSON.parse('{{ priority_counts|safe }}');
+    const priorityLabels = Object.keys(priorityData);
+    const priorityValues = Object.values(priorityData);
+
+    // Chart 2: Task Priority Distribution (Pie Chart)
+    const ctx2 = document.getElementById('priorityChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'pie',
+        data: {
+            labels: priorityLabels,
+            datasets: [{
+                label: 'Task Priority',
+                data: priorityValues,
+                backgroundColor: ['#f1c40f', '#e67e22', '#e74c3c', '#2ecc71'],
+                borderColor: '#fff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+</script>
+{% endblock %}
